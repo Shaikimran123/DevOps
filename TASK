@@ -1,0 +1,200 @@
+ download freecss templates
+ extract the template
+ create one repo
+ push template
+ 
+ create virtual machine
+ login aws portal 
+ ec2 dashboard
+ create 2 instances 
+ (-->give the name
+  -->os/select ubuntu
+  -->instace type:t3 medium
+  -->create ansible key pair(give name(2 formats .pem=linux .ppk=windows(for putty s/w))) click on create pair--> it will download the key file   
+  -->allow the http https
+  -->increase the size
+  -->launch the instaces
+  
+ the 2 instance will be created
+ rename the one instances
+ copy the public key 
+ 
+
+ cmd: ssh -i ansible.pem ubuntu@51.20.95.215 --> connecting to the instances
+ check the permissions --> ls -la | grep ansible.pem
+ change the permisson  -> chmod 600 ansible.pem
+ 
+ cmd: ssh -i ansible.pem ubuntu@51.20.95.215 
+ after connecting change the hostname if we want --> sudo hostnamectl set-hostname jenkins
+ to display the new host name --> /bin/bash
+ 
+ 
+ download the jenkins-->https://www.jenkins.io/doc/book/installing/linux/#debianubuntu
+ b4 installing the jenkins we need to download java 11 or 17
+ sudo apt update
+ sudo apt install openjdk-17-jre (jdk)
+ java --version
+ 
+curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | sudo tee \
+  /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+  https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+sudo apt-get update
+sudo apt-get install jenkins
+
+--> allow the port
+open the instances which is running on the server. 
+security->security groups->edit endound rules-> add custos tcp, 8080, selecect 0.0.0.0/0, save it
+
+after successfully installing the jenkins, open it in tye bowser
+
+copy the public key frm the instances
+0.0.0.0:8080
+paste the jenkins key
+install be packages
+
+
+
+follow the same process for another server
+
+ssh -i ansible.pem ubuntu@public key
+sudo apt update
+download the docker from --> https://docs.docker.com/engine/install/ubuntu/
+
+
+# Add Docker's official GPG key:
+
+sudo apt-get update
+sudo apt-get install ca-certificates curl gnupg
+
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Add the repository to Apt sources:
+echo \
+  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+docker ps
+error
+sudo usermod -aG docker ubuntu
+newgrp docker --> to refresh 
+docker ps
+
+switch the root user
+su root
+ssh-keygen--> hit enters
+
+and switch the root user
+ cd ~/
+ ls
+ ls -la --> here will het .shh file
+ cd .ssh
+ give ls--> here will get the authenticate key file
+ 
+
+
+
+install the ansible in jenkins server
+$ sudo apt install software-properties-common
+$ sudo add-apt-repository --yes --update ppa:ansible/ansible
+$ sudo apt install ansible
+
+ 
+install the docker packages from pip
+first install the pip
+
+sudo apt install python3-pip
+pip install docker
+
+add the docker server into the hosts file
+cd /etc/ansible
+ls
+sudo nano hosts--> it will open the file
+afetr opening
+give
+[dockerservers]
+ip address 0.0.0.0
+save and close
+cd~
+sudo su
+su jenkins
+cd~
+ls
+mkdir playbook
+cd playbook
+ssh-keygen
+cd~
+cd .ssh
+ls
+cat id_rsm.pub
+coppy the key and past into the docker servers autherized file
+
+in docker server
+	nano autherizedkey
+	paste save close
+	systemctl reload sshd
+	
+	cs~
+	mkdir project
+	cd project
+	
+
+in jenkins server
+	ssh root@ip address 
+	after connecting
+	exit
+	ls
+	cd ..
+	cd playbook
+	nano deployment.yaml
+	- name: Build & Deploy Docker Container
+	  hosts: Dockerservers
+	  gather_facts : false
+	  remote_server : root
+	  tasks:
+#	  	- name: Copy the files to remote server
+#	  	  shell: scp -r /var/lib/jenkins/workspace/ansible-jenkins-pipeline/ root@ipaddress:~/project/   
+	  	- name: Build Docker image
+	  	  docker image:
+	  	    name: micp:latest
+	  	    build:
+	  	      source: build
+	  	      path:~/project
+	  	    state: present
+	  	    
+	  	- name: creating container
+	  	   docker_container:
+	  	     name: mico_container
+	  	     image:mico:latest
+	  	     port:
+	  	      - "80:80"
+	  	     state: started
+
+to execute ansible-playbook deployment.yaml
+
+on the browser
+in jenkis server
+create one new pipeline
+with the name --> ansible-jenkins-pipeline
+add github repo
+save and build
+enable the webhooks
+
+config->check the github hook apply
+also copy the url of jenkins
+go to the github
+settings->webhooks->add webhooks-> authenticate it-> payload url give the jenkins url https://ipddress:8080/github-webhook->select individual events -> check the pull request -> apply
+
+modify somthing in repo and check pipeline is triggered or not
+
+
+
+
+
+
+
+
