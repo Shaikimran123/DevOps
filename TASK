@@ -153,18 +153,36 @@ in jenkins server
 	nano deployment.yaml
 	- name: Build & Deploy Docker Container
 	  hosts: Dockerservers
-	  gather_facts : false
-	  remote_server : root
+	  gather_facts: false
+	  remote_user: root
 	  tasks:
 #	  	- name: Copy the files to remote server
 #	  	  shell: scp -r /var/lib/jenkins/workspace/ansible-jenkins-pipeline/ root@ipaddress:~/project/   
-	  	- name: Build Docker image
-	  	  docker image:
-	  	    name: micp:latest
+	  	
+	  	- name: stoping the container
+	  	   docker_container:
+	  	     name: mico_container
+	  	     image:mico:latest
+	  	     state: stopped
+	  	     
+	  	- name: removing the container
+	  	   docker_container:
+	  	     name: mico_container
+	  	     image:mico:latest
+	  	     state: absent
+	  	     
+	  	- name: remove Docker Image
+	  	  docker_image:
+	  	    name: mico:latest
+	  	    state: absent
+	  	
+	  	- name: Building Docker Image
+	  	  docker_image:
+	  	    name: mico:latest
+	  	    source: build
 	  	    build:
-	  	      source: build
-	  	      path:~/project
-	  	    state: present
+	  	        path:~/project/
+	  	    state: present   
 	  	    
 	  	- name: creating container
 	  	   docker_container:
@@ -175,7 +193,36 @@ in jenkins server
 	  	     state: started
 
 to execute ansible-playbook deployment.yaml
+in docker server
+move all the files into the project
+cd ansible-jenkins-pipeline
+mv ./* ../
+cd ..
+ls
+ in jenkins server run again
+ in docker server check th docker status
+ docker ps
+ 
+edit the yam file
+copy the scp cmd
+goto to the jenkins->config->build setup->add scp cmd
+scp -r .var/lib/jenkins/ansible-jenkins-pipeline/* root@ipaddress:~/project/
+ansible-playbook /var/lib/jenkins/playbook/deployment.yaml
 
+check ls on doecker server
+
+build the code on jenkins.
+access it on the browser
+
+modify the github and check does it is triggered or not.
+
+in docker server
+docker ps
+docker exec -it -u root paste the container id /bin/bash
+ls
+cd /usr/share/nginx/html/
+ls
+cat index.html | grep pipeline
 on the browser
 in jenkis server
 create one new pipeline
